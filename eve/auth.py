@@ -67,7 +67,7 @@ def requires_auth(endpoint_class):
                 auth = resource_auth(resource_name)
             else:
                 # home or media endpoints
-                allow_anyways = app.config.get("PUBLIC_NON_RESOURCE")
+                allow_anyways = app.config.get("PUBLIC_NON_RESOURCES")
                 resource_name = resource = None
                 public = app.config["PUBLIC_METHODS"] + ["OPTIONS"]
                 roles = list(app.config["ALLOWED_ROLES"])
