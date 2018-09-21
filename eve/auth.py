@@ -34,6 +34,7 @@ def requires_auth(endpoint_class):
     def fdec(f):
         @wraps(f)
         def decorated(*args, **kwargs):
+            allow_anyways = False
             if endpoint_class == "resource" or endpoint_class == "item":
                 if args:
                     resource_name = args[0]
@@ -66,6 +67,7 @@ def requires_auth(endpoint_class):
                 auth = resource_auth(resource_name)
             else:
                 # home or media endpoints
+                allow_anyways = app.config.get("PUBLIC_NON_RESOURCE")
                 resource_name = resource = None
                 public = app.config["PUBLIC_METHODS"] + ["OPTIONS"]
                 roles = list(app.config["ALLOWED_ROLES"])
@@ -74,9 +76,10 @@ def requires_auth(endpoint_class):
                 else:
                     roles += app.config["ALLOWED_WRITE_ROLES"]
                 auth = app.auth
-            if auth and request.method not in public:
-                if not auth.authorized(roles, resource_name, request.method):
-                    return auth.authenticate()
+            if not allow_anyways:
+                if auth and request.method not in public:
+                    if not auth.authorized(roles, resource_name, request.method):
+                        return auth.authenticate()
             return f(*args, **kwargs)
 
         return decorated
