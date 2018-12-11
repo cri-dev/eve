@@ -479,6 +479,10 @@ class DataLayer(object):
             auth_field, request_auth_value = auth_field_and_value(resource)
             if auth_field:
                 if request_auth_value and check_auth_value:
+                    if isinstance(request_auth_value, list):
+                        query_to_add = {auth_field: {"$in": request_auth_value}}
+                    else:
+                        query_to_add = {auth_field: request_auth_value}
                     if query:
                         # If the auth_field *replaces* a field in the query,
                         # and the values are /different/, deny the request
@@ -495,11 +499,9 @@ class DataLayer(object):
                             desc = "Incompatible User-Restricted Resource " "request."
                             abort(401, description=desc)
                         else:
-                            query = self.app.data.combine_queries(
-                                query, {auth_field: request_auth_value}
-                            )
+                            query = self.app.data.combine_queries(query, query_to_add)
                     else:
-                        query = {auth_field: request_auth_value}
+                        query = query_to_add
                 if force_auth_field_projection:
                     fields[auth_field] = 1
         return datasource, query, fields, sort
